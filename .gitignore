@@ -1,0 +1,19 @@
+# .NET build output
+demo/bin/
+demo/obj/
+demo/*.db
+demo/*.db-shm
+demo/*.db-wal
+
+# VS / Rider IDE
+.vs/
+.idea/
+*.user
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# Secrets / local config
+appsettings.Development.json
+*.local.json

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ellucian ERP Integration Engine — Architecture Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f1117; font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px 24px; color: #e2e8f0; }
+  h1 { text-align: center; font-size: 16px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
+  .subtitle { text-align: center; font-size: 12px; color: #64748b; margin-bottom: 24px; }
+
+  .diagram { width: 100%; max-width: 960px; margin: 0 auto; position: relative; }
+
+  .tier { margin-bottom: 14px; }
+  .tier-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #475569; margin-bottom: 6px; padding-left: 4px; }
+
+  .row { display: flex; gap: 8px; align-items: stretch; justify-content: center; }
+  .box { flex: 1; border-radius: 6px; padding: 12px 14px; min-height: 58px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+  .box-title { font-size: 11px; font-weight: 600; line-height: 1.3; }
+  .box-sub { font-size: 9px; margin-top: 3px; opacity: 0.65; line-height: 1.4; }
+
+  .blue { background: #1e3a5f; border: 1px solid #2563eb44; }
+  .blue .box-title { color: #93c5fd; }
+  .teal { background: #0f3030; border: 1px solid #0d9488aa; }
+  .teal .box-title { color: #5eead4; }
+  .purple { background: #2d1b4e; border: 1px solid #7c3aedaa; }
+  .purple .box-title { color: #c4b5fd; }
+  .green { background: #0f2d1a; border: 1px solid #16a34aaa; }
+  .green .box-title { color: #86efac; }
+  .amber { background: #2d1f00; border: 1px solid #d97706aa; }
+  .amber .box-title { color: #fcd34d; }
+  .slate { background: #1e293b; border: 1px solid #475569aa; }
+  .slate .box-title { color: #cbd5e1; }
+  .red { background: #2d1010; border: 1px solid #dc262644; }
+  .red .box-title { color: #fca5a5; }
+
+  .arrow-row { display: flex; justify-content: center; align-items: center; height: 24px; gap: 8px; margin: -2px 0; color: #334155; font-size: 13px; }
+
+  .region-split { display: flex; gap: 14px; margin-bottom: 14px; }
+  .region { flex: 1; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; }
+  .region-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+  .region-primary .region-label { color: #60a5fa; }
+  .region-secondary .region-label { color: #94a3b8; }
+
+  .adapters-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .adapter { background: #151f2e; border: 1px solid #1e3a5f; border-radius: 5px; padding: 7px 5px; text-align: center; }
+  .adapter span { font-size: 8.5px; color: #7dd3fc; font-weight: 500; line-height: 1.4; display: block; }
+
+  .legend { display: flex; gap: 18px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 9px; color: #64748b; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+
+  .metrics { display: flex; gap: 10px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
+  .metric { background: #1e293b; border: 1px solid #334155; border-radius: 7px; padding: 10px 16px; text-align: center; min-width: 80px; }
+  .metric-val { font-size: 18px; font-weight: 700; color: #38bdf8; line-height: 1; }
+  .metric-lbl { font-size: 8px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+<div class="diagram">
+  <h1>Ellucian ERP Integration Engine</h1>
+  <p class="subtitle">Enterprise Multi-Tenant API Bridge &nbsp;·&nbsp; 500k+ Daily Transactions &nbsp;·&nbsp; 200+ Institutions</p>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val">500k+</div><div class="metric-lbl">Daily TXs</div></div>
+    <div class="metric"><div class="metric-val">&lt;100ms</div><div class="metric-lbl">p99 Latency</div></div>
+    <div class="metric"><div class="metric-val">200+</div><div class="metric-lbl">Institutions</div></div>
+    <div class="metric"><div class="metric-val">12</div><div class="metric-lbl">Integrations</div></div>
+    <div class="metric"><div class="metric-val">~0%</div><div class="metric-lbl">Duplicate Rate</div></div>
+    <div class="metric"><div class="metric-val">&lt;15min</div><div class="metric-lbl">RPO (DR)</div></div>
+  </div>
+
+  <!-- Global Entry -->
+  <div class="tier">
+    <div class="tier-label">Global Entry</div>
+    <div class="row">
+      <div class="box blue" style="max-width:300px; flex:none; margin:0 auto;">
+        <div class="box-title">🌐 Azure Front Door</div>
+        <div class="box-sub">Global load balancing · Health probes · Auto-failover to secondary region</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">↓</div>
+
+  <!-- Regions -->
+  <div class="region-split">
+    <div class="region region-primary">
+      <div class="region-label">🟢 Primary Region — East US</div>
+
+      <div class="tier-label">AKS — Autoscaling Pods · Canary Deployments</div>
+      <div class="row" style="margin-bottom:10px;">
+        <div class="box teal" style="flex:1.2">
+          <div class="box-title">🔑 Tenant Resolver Middleware</div>
+          <div class="box-sub">Per-tenant credentials, endpoint maps, feature flags, retry policies</div>
+        </div>
+        <div class="box teal" style="flex:1.2">
+          <div class="box-title">⚙️ Integration Orchestrator</div>
+          <div class="box-sub">Adapter dispatch · Exponential retry · OTel span tracing</div>
+        </div>
+        <div class="box teal" style="flex:1">
+          <div class="box-title">📤 Outbox Publisher</div>
+          <div class="box-sub">Transactional write · Idempotency key · At-least-once delivery</div>
+        </div>
+      </div>
+
+      <div class="tier-label" style="margin-top:8px;">Azure Service Bus</div>
+      <div class="row" style="margin-bottom:10px;">
+        <div class="box purple">
+          <div class="box-title">📨 Topics / Subscriptions</div>
+          <div class="box-sub">Per-tenant fan-out · Message deduplication · 500k+ msg/day</div>
+        </div>
+        <div class="box red">
+          <div class="box-title">💀 Dead Letter Queue</div>
+          <div class="box-sub">Final-failure routing · Alert within 90s · Full correlation context</div>
+        </div>
+      </div>
+
+      <div class="tier-label" style="margin-top:8px;">Persistence & Security</div>
+      <div class="row">
+        <div class="box slate">
+          <div class="box-title">🗄️ SQL Server</div>
+          <div class="box-sub">OutboxMessages · TenantConfig · TransactionLog · Change Tracking</div>
+        </div>
+        <div class="box amber">
+          <div class="box-title">🔐 Azure Key Vault</div>
+          <div class="box-sub">Managed Identity · Zero-secret credential store</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="region region-secondary" style="flex:0.55; opacity:0.72;">
+      <div class="region-label">⚪ Secondary Region — West US (Passive)</div>
+      <div class="row" style="flex-direction:column; gap:8px;">
+        <div class="box slate">
+          <div class="box-title">AKS Warm Standby</div>
+          <div class="box-sub">Min replicas · Seconds-to-activate</div>
+        </div>
+        <div class="box purple">
+          <div class="box-title">Service Bus Geo-DR</div>
+          <div class="box-sub">Alias-based failover · No message loss</div>
+        </div>
+        <div class="box slate">
+          <div class="box-title">SQL Failover Group</div>
+          <div class="box-sub">Auto-replication · RPO &lt;15 min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; font-size:9px; color:#475569; margin: -8px 0 14px; letter-spacing:0.05em;">
+    ↔ &nbsp; Geo-DR replication active across all stateful components
+  </div>
+
+  <!-- Observability -->
+  <div class="tier">
+    <div class="tier-label">Observability & Delivery</div>
+    <div class="row">
+      <div class="box green">
+        <div class="box-title">🔭 OpenTelemetry</div>
+        <div class="box-sub">Distributed traces · Named spans per adapter · Correlation IDs</div>
+      </div>
+      <div class="box green">
+        <div class="box-title">📊 App Insights + Jaeger</div>
+        <div class="box-sub">Live dashboards · Trace explorer · Latency alerts</div>
+      </div>
+      <div class="box amber">
+        <div class="box-title">🚀 GitHub Actions CI/CD</div>
+        <div class="box-sub">Build → k6 load test → canary deploy → auto-rollback</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row" style="color:#334155; font-size:11px;">↓ &nbsp; Adapter Pattern — IIntegrationAdapter per system · core engine unchanged</div>
+
+  <!-- Adapters -->
+  <div class="tier" style="margin-top:8px;">
+    <div class="tier-label">12 Third-Party Integration Adapters</div>
+    <div class="adapters-grid">
+      <div class="adapter"><span>Financial Aid Platform</span></div>
+      <div class="adapter"><span>Student Info System</span></div>
+      <div class="adapter"><span>Payment Processor</span></div>
+      <div class="adapter"><span>Identity Provider</span></div>
+      <div class="adapter"><span>LMS Connector</span></div>
+      <div class="adapter"><span>Housing System</span></div>
+      <div class="adapter"><span>Bursar Platform</span></div>
+      <div class="adapter"><span>Transcript Service</span></div>
+      <div class="adapter"><span>Admissions API</span></div>
+      <div class="adapter"><span>HR / Payroll</span></div>
+      <div class="adapter"><span>Reporting Engine</span></div>
+      <div class="adapter"><span>Notification Hub</span></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#0d9488;"></div>Core API / AKS</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>Azure Service Bus</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div>Global / Networking</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#475569;"></div>Persistence / Infra</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a34a;"></div>Observability / CI</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>Dead Letter / Failure</div>
+  </div>
+</div>
+</body>
+</html>

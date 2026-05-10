@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ellucian ERP Integration Engine — Portfolio</title>
+<style>
+  :root {
+    --bg:        #080c14;
+    --surface:   #0f1623;
+    --surface2:  #161e2e;
+    --border:    #1e2d45;
+    --border2:   #243452;
+    --blue:      #3b82f6;
+    --blue-dim:  #1d3a6b;
+    --blue-glow: #3b82f622;
+    --teal:      #14b8a6;
+    --teal-dim:  #0f3030;
+    --purple:    #8b5cf6;
+    --purple-dim:#2d1b4e;
+    --green:     #22c55e;
+    --green-dim: #0f2d1a;
+    --amber:     #f59e0b;
+    --amber-dim: #2d1f00;
+    --red:       #ef4444;
+    --red-dim:   #2d1010;
+    --text:      #e2e8f0;
+    --text-muted:#64748b;
+    --text-dim:  #94a3b8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  nav .inner {
+    max-width: 1080px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-size: 13px; font-weight: 700; color: var(--blue); letter-spacing: 0.05em; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a {
+    font-size: 12px; color: var(--text-muted); text-decoration: none;
+    letter-spacing: 0.04em; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--blue-glow); border: 1px solid var(--blue-dim);
+    color: var(--blue); font-size: 11px; font-weight: 600;
+    padding: 4px 12px; border-radius: 100px; letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .badge::before { content: ''; width: 6px; height: 6px; background: var(--blue); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .tagline {
+    font-size: 16px; color: var(--text-dim); max-width: 560px;
+    margin-bottom: 40px; line-height: 1.7;
+  }
+
+  /* ── METRICS ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 700px) { .metrics { grid-template-columns: repeat(3, 1fr); } }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .metric:hover { border-color: var(--blue-dim); transform: translateY(-2px); }
+  .metric-val {
+    font-size: 22px; font-weight: 800;
+    color: var(--blue); line-height: 1; letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .metric-lbl {
+    font-size: 9px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  /* ── CTA BUTTONS ── */
+  .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    transition: all 0.2s; cursor: pointer; border: none;
+  }
+  .btn-primary {
+    background: var(--blue); color: #fff;
+  }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border2);
+  }
+  .btn-outline:hover { border-color: var(--blue-dim); color: var(--text); transform: translateY(-1px); }
+
+  /* ── SECTION ── */
+  section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: clamp(20px, 3vw, 28px); font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 12px;
+  }
+  .section-desc {
+    font-size: 14px; color: var(--text-dim); max-width: 600px;
+    margin-bottom: 36px; line-height: 1.7;
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .diagram-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .diagram-title { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+  .diagram-body { padding: 24px; }
+
+  /* mini diagram */
+  .arch-grid { display: flex; flex-direction: column; gap: 10px; }
+  .arch-row { display: flex; gap: 8px; align-items: stretch; }
+  .arch-box {
+    flex: 1; border-radius: 7px; padding: 10px 14px;
+    min-height: 52px; display: flex; flex-direction: column;
+    justify-content: center;
+  }
+  .arch-box .t { font-size: 11px; font-weight: 600; }
+  .arch-box .s { font-size: 9px; margin-top: 2px; opacity: 0.6; line-height: 1.4; }
+
+  .a-blue   { background:#1e3a5f; border:1px solid #2563eb33; }
+  .a-blue .t { color:#93c5fd; }
+  .a-teal   { background:#0f3030; border:1px solid #14b8a633; }
+  .a-teal .t { color:#5eead4; }
+  .a-purple { background:#2d1b4e; border:1px solid #8b5cf633; }
+  .a-purple .t { color:#c4b5fd; }
+  .a-slate  { background:#1e293b; border:1px solid #47556933; }
+  .a-slate .t { color:#cbd5e1; }
+  .a-amber  { background:#2d1f00; border:1px solid #f59e0b33; }
+  .a-amber .t { color:#fcd34d; }
+  .a-red    { background:#2d1010; border:1px solid #ef444433; }
+  .a-red .t  { color:#fca5a5; }
+  .a-green  { background:#0f2d1a; border:1px solid #22c55e33; }
+  .a-green .t { color:#86efac; }
+
+  .arch-label {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .arch-arrow {
+    text-align: center; color: var(--border2); font-size: 13px;
+    padding: 2px 0; letter-spacing: 0.06em; font-size: 10px;
+    color: var(--text-muted);
+  }
+  .adapters-row {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;
+    margin-top: 4px;
+  }
+  .adapter-chip {
+    background: #0d1a2e; border: 1px solid #1e3a5f;
+    border-radius: 5px; padding: 6px 4px; text-align: center;
+  }
+  .adapter-chip span { font-size: 8px; color: #7dd3fc; font-weight: 500; display: block; line-height: 1.3; }
+
+  .region-row { display: flex; gap: 10px; }
+  .region-box { border: 1px solid var(--border2); border-radius: 8px; padding: 10px; }
+  .region-box.primary { flex: 1.7; }
+  .region-box.secondary { flex: 0.8; opacity: 0.65; }
+  .region-label { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .region-box.primary .region-label { color: #60a5fa; }
+  .region-box.secondary .region-label { color: #64748b; }
+
+  /* ── PATTERNS ── */
+  .patterns-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .patterns-grid { grid-template-columns: 1fr; } }
+  .pattern-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .pattern-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .pattern-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; margin-bottom: 14px;
+  }
+  .pattern-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .pattern-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+  .pattern-stat {
+    display: inline-block; margin-top: 12px;
+    font-size: 10px; font-weight: 700;
+    color: var(--green); background: var(--green-dim);
+    border: 1px solid #22c55e22; border-radius: 5px;
+    padding: 3px 8px; letter-spacing: 0.05em;
+  }
+
+  /* ── RETRY LADDER ── */
+  .retry-ladder {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .ladder-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 600; color: var(--text-dim);
+  }
+  .ladder-row {
+    display: flex; align-items: center;
+    padding: 12px 20px; gap: 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .ladder-row:last-child { border-bottom: none; }
+  .ladder-row:hover { background: var(--surface2); }
+  .ladder-attempt {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .ladder-delay { font-size: 14px; font-weight: 700; color: var(--text); width: 60px; }
+  .ladder-bar-wrap { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .ladder-bar { height: 100%; border-radius: 2px; }
+  .ladder-reason { font-size: 11px; color: var(--text-muted); width: 260px; }
+
+  /* ── TECH STACK ── */
+  .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .stack-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stack-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    transition: border-color 0.2s;
+  }
+  .stack-chip:hover { border-color: var(--border2); }
+  .stack-icon { font-size: 18px; flex-shrink: 0; }
+  .stack-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .stack-role { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+  /* ── CODE PREVIEW ── */
+  .code-tabs { display: flex; gap: 2px; margin-bottom: 0; }
+  .tab {
+    padding: 8px 16px; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); background: var(--surface);
+    border: 1px solid var(--border); border-bottom: none;
+    border-radius: 6px 6px 0 0; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .tab.active { color: var(--text); background: var(--surface2); border-color: var(--border2); }
+  .code-block {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 0 8px 8px 8px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 12px; line-height: 1.65;
+    overflow-x: auto;
+    display: none;
+  }
+  .code-block.active { display: block; }
+  .kw  { color: #c4b5fd; }
+  .cl  { color: #93c5fd; }
+  .str { color: #86efac; }
+  .cm  { color: #475569; font-style: italic; }
+  .nm  { color: #fcd34d; }
+  .pu  { color: #e2e8f0; }
+
+  /* ── LINKS / DELIVERABLES ── */
+  .links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 600px) { .links-grid { grid-template-columns: 1fr; } }
+  .link-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    text-decoration: none; color: inherit;
+    display: flex; align-items: flex-start; gap: 14px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .link-card:hover { border-color: var(--blue-dim); transform: translateY(-2px); }
+  .link-icon {
+    width: 38px; height: 38px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .link-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .link-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── BEFORE/AFTER ── */
+  .ba-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .ba-row { grid-template-columns: 1fr; } }
+  .ba-card {
+    border-radius: 10px; padding: 24px;
+    border: 1px solid var(--border);
+  }
+  .ba-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .ba-val { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .ba-desc { font-size: 12px; color: var(--text-muted); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 40px 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  footer strong { color: var(--text-dim); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="inner">
+    <span class="nav-logo">ELLUCIAN · ERP INTEGRATION ENGINE</span>
+    <div class="nav-links">
+      <a href="#architecture">Architecture</a>
+      <a href="#patterns">Patterns</a>
+      <a href="#stack">Stack</a>
+      <a href="#code">Code</a>
+      <a href="#deliverables">Deliverables</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container">
+    <div class="badge">Production System · Already Shipped</div>
+    <h1>Ellucian ERP Integration Engine</h1>
+    <p class="tagline">Enterprise multi-tenant API bridge serving 200+ university institutions — 500,000+ daily transactions with sub-100ms p99 latency and zero message loss under failure conditions.</p>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-val">500k+</div><div class="metric-lbl">Daily Transactions</div></div>
+      <div class="metric"><div class="metric-val">&lt;100ms</div><div class="metric-lbl">p99 Latency</div></div>
+      <div class="metric"><div class="metric-val">200+</div><div class="metric-lbl">Institutions</div></div>
+      <div class="metric"><div class="metric-val">12</div><div class="metric-lbl">Integrations</div></div>
+      <div class="metric"><div class="metric-val">~0%</div><div class="metric-lbl">Duplicate Rate</div></div>
+      <div class="metric"><div class="metric-val">&lt;15min</div><div class="metric-lbl">RPO (DR)</div></div>
+    </div>
+
+    <div class="cta-row">
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/tree/main/demo" class="btn btn-primary" target="_blank" rel="noopener">▶ &nbsp; Run Live Demo</a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine#readme" class="btn btn-outline" target="_blank" rel="noopener">📄 &nbsp; README Case Study</a>
+      <a href="https://cruzzi-myth.github.io/ellucian-erp-integration-engine/architecture-diagram.html" class="btn btn-outline" target="_blank" rel="noopener">📐 &nbsp; Architecture Diagram</a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/tree/main/samples" class="btn btn-outline" target="_blank" rel="noopener">{ } &nbsp; Code Samples</a>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-label">System Design</div>
+    <div class="section-title">Full-Stack Azure Architecture</div>
+    <p class="section-desc">Active/passive multi-region deployment with automatic failover. Every component is replicated — Service Bus Geo-DR, SQL Failover Groups, and AKS warm standby — achieving RPO &lt; 15 minutes.</p>
+
+    <div class="diagram-wrap">
+      <div class="diagram-header">
+        <div class="dot" style="background:#ef4444"></div>
+        <div class="dot" style="background:#f59e0b"></div>
+        <div class="dot" style="background:#22c55e"></div>
+        <span class="diagram-title">integration-engine · production · East US / West US</span>
+      </div>
+      <div class="diagram-body">
+        <div class="arch-grid">
+          <!-- Entry -->
+          <div class="arch-label">Global Entry</div>
+          <div class="arch-row" style="justify-content:center">
+            <div class="arch-box a-blue" style="max-width:280px">
+              <div class="t">🌐 Azure Front Door</div>
+              <div class="s">Global load balancing · Health probes · Auto-failover</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+
+          <!-- Regions -->
+          <div class="region-row">
+            <div class="region-box primary">
+              <div class="region-label">🟢 Primary Region — East US</div>
+              <div class="arch-label">AKS — Autoscaling · Canary Deployments</div>
+              <div class="arch-row" style="margin-bottom:8px">
+                <div class="arch-box a-teal" style="flex:1.2"><div class="t">🔑 Tenant Resolver</div><div class="s">Per-tenant credentials, feature flags, retry policies</div></div>
+                <div class="arch-box a-teal" style="flex:1.2"><div class="t">⚙️ Orchestrator</div><div class="s">Adapter dispatch · Retry · OTel tracing</div></div>
+                <div class="arch-box a-teal" style="flex:1"><div class="t">📤 Outbox Publisher</div><div class="s">Transactional write · Idempotency key</div></div>
+              </div>
+              <div class="arch-label" style="margin-top:6px">Azure Service Bus (Premium)</div>
+              <div class="arch-row" style="margin-bottom:8px">
+                <div class="arch-box a-purple"><div class="t">📨 Topics / Subscriptions</div><div class="s">Per-tenant fan-out · 500k+ msg/day</div></div>
+                <div class="arch-box a-red"><div class="t">💀 Dead Letter Queue</div><div class="s">Final-failure routing · Alert in 90s</div></div>
+              </div>
+              <div class="arch-label" style="margin-top:6px">Persistence & Security</div>
+              <div class="arch-row">
+                <div class="arch-box a-slate"><div class="t">🗄️ SQL Server</div><div class="s">OutboxMessages · TenantConfig · Change Tracking</div></div>
+                <div class="arch-box a-amber"><div class="t">🔐 Key Vault</div><div class="s">Managed Identity · Zero-secret store</div></div>
+              </div>
+            </div>
+            <div class="region-box secondary">
+              <div class="region-label">⚪ Secondary — West US (Passive)</div>
+              <div class="arch-row" style="flex-direction:column;gap:7px">
+                <div class="arch-box a-slate"><div class="t">AKS Warm Standby</div><div class="s">Min replicas kept warm</div></div>
+                <div class="arch-box a-purple"><div class="t">Service Bus Geo-DR</div><div class="s">Alias-based failover</div></div>
+                <div class="arch-box a-slate"><div class="t">SQL Failover Group</div><div class="s">RPO &lt; 15 min</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-arrow" style="font-size:9px">↔ Geo-DR replication active across all stateful components</div>
+
+          <!-- Observability -->
+          <div class="arch-label">Observability & CI/CD</div>
+          <div class="arch-row">
+            <div class="arch-box a-green"><div class="t">🔭 OpenTelemetry</div><div class="s">Named spans · Correlation IDs</div></div>
+            <div class="arch-box a-green"><div class="t">📊 App Insights + Jaeger</div><div class="s">Live metrics · Trace explorer</div></div>
+            <div class="arch-box a-amber"><div class="t">🚀 GitHub Actions</div><div class="s">Build → k6 load test → canary</div></div>
+          </div>
+
+          <div class="arch-arrow" style="font-size:9px">↓ Adapter Pattern — IIntegrationAdapter per system · core engine unchanged when adding integrations</div>
+
+          <!-- Adapters -->
+          <div class="arch-label">12 Third-Party Integration Adapters</div>
+          <div class="adapters-row">
+            <div class="adapter-chip"><span>Financial Aid Platform</span></div>
+            <div class="adapter-chip"><span>Student Info System</span></div>
+            <div class="adapter-chip"><span>Payment Processor</span></div>
+            <div class="adapter-chip"><span>Identity Provider</span></div>
+            <div class="adapter-chip"><span>LMS Connector</span></div>
+            <div class="adapter-chip"><span>Housing System</span></div>
+            <div class="adapter-chip"><span>Bursar Platform</span></div>
+            <div class="adapter-chip"><span>Transcript Service</span></div>
+            <div class="adapter-chip"><span>Admissions API</span></div>
+            <div class="adapter-chip"><span>HR / Payroll</span></div>
+            <div class="adapter-chip"><span>Reporting Engine</span></div>
+            <div class="adapter-chip"><span>Notification Hub</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PATTERNS -->
+<section id="patterns">
+  <div class="container">
+    <div class="section-label">Engineering Depth</div>
+    <div class="section-title">Key Reliability Patterns</div>
+    <p class="section-desc">Three architectural decisions that directly drove the system's reliability numbers — each solving a specific failure mode observed in production.</p>
+
+    <div class="patterns-grid">
+      <!-- Outbox -->
+      <div class="pattern-card">
+        <div class="pattern-icon" style="background:#0f2d1a">📤</div>
+        <div class="pattern-title">Transactional Outbox + Idempotency</div>
+        <p class="pattern-desc">Before any third-party API call, the intent is written to an <code style="color:var(--teal);background:var(--teal-dim);padding:1px 5px;border-radius:3px;font-size:11px">OutboxMessages</code> table inside the same database transaction as the application state change. A background processor dispatches with a deterministic idempotency key — guaranteeing exactly-once delivery even across crashes.</p>
+        <span class="pattern-stat">~0% duplicate rate (was 3–5% before)</span>
+      </div>
+
+      <!-- Retry Ladder -->
+      <div class="pattern-card">
+        <div class="pattern-icon" style="background:#2d1f00">⏳</div>
+        <div class="pattern-title">Calibrated Exponential Retry Ladder</div>
+        <p class="pattern-desc">Five retry attempts with delays calibrated against real failure patterns across 12 third-party APIs. 5s covers network blips; 30m covers DR events. Terminal failures bypass the ladder entirely and route straight to DLQ with full diagnostic context attached.</p>
+        <span class="pattern-stat">5s → 30s → 2m → 10m → 30m → DLQ</span>
+      </div>
+
+      <!-- Multi-tenant -->
+      <div class="pattern-card">
+        <div class="pattern-icon" style="background:#1e3a5f">🔑</div>
+        <div class="pattern-title">Runtime Multi-Tenant Isolation</div>
+        <p class="pattern-desc">Every institution is a fully isolated tenant. A <code style="color:var(--teal);background:var(--teal-dim);padding:1px 5px;border-radius:3px;font-size:11px">TenantResolverMiddleware</code> resolves the institution's API credentials, endpoint overrides, feature flags, and retry policies at runtime from a cached config store. Onboarding a new university is a data operation — no deployment required.</p>
+        <span class="pattern-stat">200+ tenants, zero shared state</span>
+      </div>
+    </div>
+
+    <!-- Retry ladder visualization -->
+    <div style="margin-top:32px">
+      <div class="section-label" style="margin-bottom:12px">Retry Ladder — Production Calibration</div>
+      <div class="retry-ladder">
+        <div class="ladder-header">Attempt → Delay → Failure class it handles</div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#1e3a5f;color:#93c5fd">1</div>
+          <div class="ladder-delay" style="color:#93c5fd">5s</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:5%;background:#3b82f6"></div></div>
+          <div class="ladder-reason">Transient network blip, CDN hiccup, brief rate limit</div>
+        </div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#1e3a5f;color:#93c5fd">2</div>
+          <div class="ladder-delay" style="color:#93c5fd">30s</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:15%;background:#3b82f6"></div></div>
+          <div class="ladder-reason">Rate-limited (most APIs recover within 20–30s), momentary overload</div>
+        </div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#2d1b4e;color:#c4b5fd">3</div>
+          <div class="ladder-delay" style="color:#c4b5fd">2m</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:35%;background:#8b5cf6"></div></div>
+          <div class="ladder-reason">Partial upstream outage, service restart in progress</div>
+        </div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#2d1b4e;color:#c4b5fd">4</div>
+          <div class="ladder-delay" style="color:#c4b5fd">10m</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:65%;background:#8b5cf6"></div></div>
+          <div class="ladder-reason">Extended incident — API team is likely aware, fix imminent</div>
+        </div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#2d1f00;color:#fcd34d">5</div>
+          <div class="ladder-delay" style="color:#fcd34d">30m</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:90%;background:#f59e0b"></div></div>
+          <div class="ladder-reason">Maintenance window or DR event on the third-party side</div>
+        </div>
+        <div class="ladder-row">
+          <div class="ladder-attempt" style="background:#2d1010;color:#fca5a5">DLQ</div>
+          <div class="ladder-delay" style="color:#fca5a5;font-size:11px">Alert</div>
+          <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:100%;background:#ef4444"></div></div>
+          <div class="ladder-reason">Human review required. Alert fires within 90s with full correlation context.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Before / After -->
+    <div style="margin-top:32px">
+      <div class="section-label" style="margin-bottom:12px">Impact — Before vs. After Outbox Pattern</div>
+      <div class="ba-row">
+        <div class="ba-card" style="background:#2d1010;border-color:#ef444433">
+          <div class="ba-label" style="color:#fca5a5">Before — Direct API calls</div>
+          <div class="ba-val" style="color:#ef4444">3–5%</div>
+          <div class="ba-desc">Duplicate transaction rate during transient failures. Silent data corruption — no alerts, no visibility.</div>
+        </div>
+        <div class="ba-card" style="background:#0f2d1a;border-color:#22c55e33">
+          <div class="ba-label" style="color:#86efac">After — Outbox pattern</div>
+          <div class="ba-val" style="color:#22c55e">~0%</div>
+          <div class="ba-desc">Duplicate transaction rate. Every failure is visible, retried, and either resolved or DLQ-routed with full context.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">Technology</div>
+    <div class="section-title">Full Stack</div>
+    <p class="section-desc">Every tool chosen for a specific production reason — not resume padding.</p>
+
+    <div class="stack-grid">
+      <div class="stack-chip"><span class="stack-icon">⚡</span><div><div class="stack-name">C# / .NET 6</div><div class="stack-role">Core API bridge & orchestration</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">📨</span><div><div class="stack-name">Azure Service Bus</div><div class="stack-role">Async messaging, Topics, Geo-DR</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">☸️</span><div><div class="stack-name">AKS</div><div class="stack-role">Autoscaling, canary deployments</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🗄️</span><div><div class="stack-name">SQL Server + EF Core</div><div class="stack-role">Outbox table, Change Tracking</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🔭</span><div><div class="stack-name">OpenTelemetry</div><div class="stack-role">Distributed traces, named spans</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🏗️</span><div><div class="stack-name">Terraform</div><div class="stack-role">Full Azure IaC, &lt;20min cold start</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🌐</span><div><div class="stack-name">Azure Front Door</div><div class="stack-role">Global routing, DR failover</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🔐</span><div><div class="stack-name">Key Vault + Managed ID</div><div class="stack-role">Zero-secret credential management</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🚀</span><div><div class="stack-name">GitHub Actions</div><div class="stack-role">CI/CD pipeline, AKS deployment</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">📊</span><div><div class="stack-name">App Insights + Jaeger</div><div class="stack-role">Live metrics, trace explorer</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">⚖️</span><div><div class="stack-name">k6</div><div class="stack-role">Load testing pre-release</div></div></div>
+      <div class="stack-chip"><span class="stack-icon">🔄</span><div><div class="stack-name">SQL Failover Groups</div><div class="stack-role">Multi-region DR, RPO &lt;15min</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE PREVIEW -->
+<section id="code">
+  <div class="container">
+    <div class="section-label">Implementation</div>
+    <div class="section-title">Core Pattern Samples</div>
+    <p class="section-desc">Sanitized excerpts from the production codebase showing the key design patterns.</p>
+
+    <div class="code-tabs">
+      <div class="tab active" onclick="showTab('outbox')">Outbox Publisher</div>
+      <div class="tab" onclick="showTab('adapter')">Adapter Interface</div>
+      <div class="tab" onclick="showTab('retry')">Retry Ladder</div>
+    </div>
+
+    <div class="code-block active" id="tab-outbox"><span class="cm">// Writes intent atomically with the caller's DB transaction.</span>
+<span class="cm">// If the transaction rolls back, the outbox record rolls back too.</span>
+<span class="kw">public async</span> <span class="cl">Task</span>&lt;<span class="cl">OutboxMessage</span>&gt; <span class="nm">PublishAsync</span>(
+    <span class="cl">string</span> tenantId, <span class="cl">string</span> adapterName,
+    <span class="cl">string</span> operationType, <span class="cl">object</span> payload,
+    <span class="cl">Guid</span> sourceTransactionId)
+<span class="pu">{</span>
+    <span class="cm">// Deterministic key — same transaction always produces same key.</span>
+    <span class="cm">// Re-processing a recovered outbox record is safe — downstream rejects duplicate.</span>
+    <span class="kw">var</span> idempotencyKey = <span class="nm">DeriveKey</span>(sourceTransactionId, operationType);
+
+    <span class="kw">var</span> msg = <span class="kw">new</span> <span class="cl">OutboxMessage</span>
+    <span class="pu">{</span>
+        TenantId       = tenantId,
+        AdapterName    = adapterName,
+        IdempotencyKey = idempotencyKey,
+        Status         = <span class="cl">OutboxStatus</span>.Pending,
+        NextRetryAt    = <span class="cl">DateTime</span>.UtcNow
+    <span class="pu">};</span>
+
+    _db.OutboxMessages.<span class="nm">Add</span>(msg);
+    <span class="cm">// Caller SaveChanges inside their transaction — atomicity guaranteed.</span>
+    <span class="kw">return</span> msg;
+<span class="pu">}</span></div>
+
+    <div class="code-block" id="tab-adapter"><span class="cm">// Core contract every third-party integration must fulfill.</span>
+<span class="cm">// The orchestrator only knows this interface — never the concrete system.</span>
+<span class="kw">public interface</span> <span class="cl">IIntegrationAdapter</span>
+<span class="pu">{</span>
+    <span class="cl">string</span> AdapterName <span class="pu">{ get; }</span>
+
+    <span class="cl">Task</span>&lt;<span class="cl">AdapterResult</span>&gt; <span class="nm">ExecuteAsync</span>(
+        <span class="cl">IntegrationRequest</span> request,
+        <span class="cl">TenantContext</span> tenantContext,
+        <span class="cl">CancellationToken</span> ct = <span class="kw">default</span>);
+<span class="pu">}</span>
+
+<span class="cm">// Adding a new integration = implement this + register it.</span>
+<span class="cm">// Retry, DLQ routing, tracing, tenant isolation — all automatic.</span>
+<span class="kw">public sealed class</span> <span class="cl">FinancialAidAdapter</span> : <span class="cl">IIntegrationAdapter</span>
+<span class="pu">{</span>
+    <span class="kw">public</span> <span class="cl">string</span> AdapterName => <span class="str">"financial-aid-platform"</span>;
+
+    <span class="kw">public async</span> <span class="cl">Task</span>&lt;<span class="cl">AdapterResult</span>&gt; <span class="nm">ExecuteAsync</span>(
+        <span class="cl">IntegrationRequest</span> request,
+        <span class="cl">TenantContext</span> tenant,
+        <span class="cl">CancellationToken</span> ct)
+    <span class="pu">{</span>
+        <span class="cm">// tenant.ApiCredentials resolved at runtime from Key Vault</span>
+        <span class="kw">var</span> response = <span class="kw">await</span> _httpClient.<span class="nm">PostAsync</span>(...);
+        <span class="kw">return</span> <span class="cl">AdapterResult</span>.<span class="nm">Success</span>();
+    <span class="pu">}</span>
+<span class="pu">}</span></div>
+
+    <div class="code-block" id="tab-retry"><span class="cm">// Demo ladder (production: 5s/30s/2m/10m/30m)</span>
+<span class="kw">public static readonly</span> <span class="cl">int</span>[] DelaysSeconds = [<span class="nm">3</span>, <span class="nm">8</span>, <span class="nm">15</span>, <span class="nm">25</span>, <span class="nm">45</span>];
+
+<span class="cm">// ONE attempt per call. Delays stored as NextRetryAt in DB —</span>
+<span class="cm">// no thread.Sleep, non-blocking, survives process restarts.</span>
+<span class="kw">if</span> (result.IsSuccess)
+<span class="pu">{</span>
+    msg.Status = <span class="cl">OutboxStatus</span>.Delivered;
+    <span class="kw">return</span>;
+<span class="pu">}</span>
+
+<span class="kw">if</span> (result.IsTerminalFailure || attempt >= MaxAttempts)
+<span class="pu">{</span>
+    msg.Status = <span class="cl">OutboxStatus</span>.DeadLettered;
+    <span class="kw">await</span> _dlq.<span class="nm">RouteAsync</span>(msg, result); <span class="cm">// alert fires in 90s</span>
+    <span class="kw">return</span>;
+<span class="pu">}</span>
+
+<span class="cm">// Schedule next attempt — background processor picks it up</span>
+msg.NextRetryAt = <span class="cl">DateTime</span>.UtcNow.<span class="nm">AddSeconds</span>(DelaysSeconds[attempt - <span class="nm">1</span>]);
+msg.Status = <span class="cl">OutboxStatus</span>.Pending;</div>
+  </div>
+</section>
+
+<!-- DELIVERABLES -->
+<section id="deliverables">
+  <div class="container">
+    <div class="section-label">Portfolio Assets</div>
+    <div class="section-title">All Deliverables</div>
+    <p class="section-desc">Every artifact built for this project — documentation, diagrams, code, and infrastructure.</p>
+
+    <div class="links-grid">
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine#readme" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#1e3a5f">📄</div>
+        <div>
+          <div class="link-title">README Case Study</div>
+          <div class="link-desc">800-word architecture deep-dive: multi-tenant model, outbox pattern, retry ladder rationale, DR topology, and key metrics. Portfolio-grade GitHub README.</div>
+        </div>
+      </a>
+      <a href="https://cruzzi-myth.github.io/ellucian-erp-integration-engine/architecture-diagram.html" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#0f3030">📐</div>
+        <div>
+          <div class="link-title">Full Architecture Diagram</div>
+          <div class="link-desc">Interactive system diagram showing all 12 integrations, Service Bus topology, AKS deployment, SQL failover, Front Door routing, and DR path.</div>
+        </div>
+      </a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/tree/main/samples" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#2d1b4e">{ }</div>
+        <div>
+          <div class="link-title">C# Code Samples</div>
+          <div class="link-desc">5 annotated files: OutboxPublisher, IIntegrationAdapter, TenantResolverMiddleware, RetryOrchestrator, and OpenTelemetry configuration.</div>
+        </div>
+      </a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/blob/main/infra/main.tf" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#2d1f00">🏗️</div>
+        <div>
+          <div class="link-title">Terraform Infrastructure</div>
+          <div class="link-desc">Full Azure estate IaC: AKS, Service Bus Geo-DR, SQL Failover Group, Key Vault, Front Door, Application Insights. Provisions in &lt;20 minutes.</div>
+        </div>
+      </a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/tree/main/demo" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#0f2d1a">▶</div>
+        <div>
+          <div class="link-title">Runnable Demo App</div>
+          <div class="link-desc">.NET Web API with live Swagger UI. Submit integration requests and watch the outbox pattern, retry ladder, and DLQ routing fire in real time.</div>
+        </div>
+      </a>
+      <a href="https://github.com/cruzzi-myth/ellucian-erp-integration-engine/blob/main/samples/OpenTelemetryConfig.cs" class="link-card" target="_blank" rel="noopener">
+        <div class="link-icon" style="background:#0f2d1a">🔭</div>
+        <div>
+          <div class="link-title">OpenTelemetry Config</div>
+          <div class="link-desc">Distributed tracing setup with dual export (App Insights + Jaeger). Includes annotated span tree showing a real retry scenario trace.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p><strong>Ellucian ERP Integration Engine</strong> &nbsp;·&nbsp; Lead Engineer: Design → Implementation → Production → On-call</p>
+    <p style="margin-top:6px">C# · .NET 6 · Azure Service Bus · AKS · SQL Server · OpenTelemetry · Terraform</p>
+  </div>
+</footer>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+</script>
+</body>
+</html>
