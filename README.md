@@ -2,11 +2,13 @@
 
 **Enterprise Multi-Tenant API Bridge** — 500k+ Daily Transactions Across 200+ Institutions
 
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com) [![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://github.com) [![Uptime](https://img.shields.io/badge/uptime-99.97%25-brightgreen)](https://github.com) [![Latency](https://img.shields.io/badge/p99%20latency-%3C100ms-blue)](https://github.com)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/cruzzi-myth/ellucian-erp-integration-engine) [![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://github.com/cruzzi-myth/ellucian-erp-integration-engine) [![Uptime](https://img.shields.io/badge/uptime-99.97%25-brightgreen)](https://github.com/cruzzi-myth/ellucian-erp-integration-engine) [![Latency](https://img.shields.io/badge/p99%20latency-%3C100ms-blue)](https://github.com/cruzzi-myth/ellucian-erp-integration-engine)
 
 ---
 
-> **[📐 View Full Architecture Diagram →](./architecture-diagram.html)**
+**[📊 Portfolio Case Study →](https://cruzzi-myth.github.io/ellucian-erp-integration-engine/portfolio-card.html)** &nbsp;·&nbsp; **[📐 Architecture Diagram →](https://cruzzi-myth.github.io/ellucian-erp-integration-engine/architecture-diagram.html)** &nbsp;·&nbsp; **[▶ Run Demo Locally →](#running-the-demo)**
+
+---
 
 ## Overview
 
@@ -30,6 +32,49 @@ I designed and built this system end-to-end: architecture, implementation, infra
 
 ---
 
+## Running the Demo
+
+A fully runnable .NET demo app is included in [`/demo`](./demo). It simulates the outbox pattern, adapter dispatch, and retry ladder end-to-end with mock adapters that have realistic failure rates.
+
+**Requirements:** .NET 10 SDK
+
+```bash
+# Clone and run
+git clone https://github.com/cruzzi-myth/ellucian-erp-integration-engine.git
+cd ellucian-erp-integration-engine/demo
+dotnet run
+```
+
+Then open **http://localhost:5000/swagger** to interact with the API.
+
+**Demo endpoints:**
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/integration/submit` | Submit a message to the outbox (requires `X-Tenant-Id` header) |
+| `GET /api/integration/outbox` | View outbox messages and their retry state |
+| `GET /api/integration/dlq` | View dead-lettered messages after retry exhaustion |
+| `GET /api/integration/adapters` | List available mock adapters |
+| `GET /api/tenants` | List the three demo university tenants |
+
+**Demo tenants:** `mit-university`, `stanford-university`, `harvard-university`
+
+**Demo adapters and failure rates:**
+
+| Adapter | Transient Failure | Terminal Failure | Notes |
+|---|---|---|---|
+| `financial-aid-platform` | 55% | 10% | Mimics real enrollment-period rate limiting |
+| `payment-processor` | 35% | 12% | Terminal = CARD_DECLINED, FRAUD_BLOCK |
+| `student-info-system` | 25% | 5% | Occasional batch-window timeouts |
+| `transcript-service` | 15% | 3% | Mostly reliable — clean happy-path demo |
+
+**Retry ladder (demo mode):** 3s → 8s → 15s → 25s → 45s → DLQ  
+**Production ladder:** 5s → 30s → 2m → 10m → 30m → DLQ
+
+Watch the console output as the background processor fires, retries fail, and messages eventually deliver or dead-letter in real time.
+
+---
+
 ## Architecture
 
 ### Multi-Tenant Isolation Model
@@ -44,44 +89,38 @@ The hardest reliability problem this system solves is **guaranteeing exactly-onc
 
 The naive approach — calling the third-party API directly inside the request handler — creates two failure modes: a crash after the API call succeeds but before the response is acknowledged causes a duplicate transaction; a crash before the call is made causes a lost event. Both are invisible at the API layer.
 
-The outbox pattern eliminates both failure modes. Before any third-party call is made, the intended message is written to an `OutboxMessages` table inside the same database transaction as the application state change. A background processor then reads unpublished outbox records and dispatches them to Azure Service Bus. Each message carries a unique `IdempotencyKey` derived from the originating transaction ID; all downstream adapters enforce deduplication before applying any state change.
+The outbox pattern eliminates both failure modes. Before any third-party call is made, the intended message is written to an `OutboxMessages` table inside the same database transaction as the application state change. A background processor then reads unpublished outbox records and dispatches them. Each message carries a unique `IdempotencyKey` derived from the originating transaction ID and operation type via SHA-256; all downstream adapters enforce deduplication before applying any state change.
 
 **Before outbox pattern:** duplicate transaction rate during transient failures: ~3–5% of error-path events  
 **After outbox pattern:** duplicate transaction rate: effectively 0%
 
-The outbox processor uses SQL Server's Change Tracking feature to detect new records with minimal polling overhead, keeping end-to-end delivery latency under 500ms even under load.
-
 ### Exponential Retry Ladder
 
-Not all failures are equal. A third-party API that returns HTTP 429 needs seconds; one that's mid-maintenance window needs minutes. The retry ladder was calibrated against real failure patterns observed across the 12 integrated systems:
+Not all failures are equal. The retry ladder was calibrated against real failure patterns observed across the 12 integrated systems:
 
-| Attempt | Delay | Rationale |
+| Attempt | Production Delay | Rationale |
 |---|---|---|
 | 1st retry | 5 seconds | Transient network blip, CDN hiccup |
 | 2nd retry | 30 seconds | Rate-limited or momentary overload |
 | 3rd retry | 2 minutes | Partial outage, upstream restart |
 | 4th retry | 10 minutes | Extended incident underway |
 | 5th retry | 30 minutes | Maintenance window or DR event |
-| Final failure | DLQ routing | Human review + alerting |
+| Final failure | DLQ routing | Human review + alerting within 90s |
 
-On final failure, messages are routed to a per-tenant Dead Letter Queue on Azure Service Bus. An alerting rule fires within 90 seconds, and each DLQ message includes full correlation context — tenant ID, integration target, original payload hash, and all retry attempt timestamps — so on-call engineers can triage and replay without guesswork.
+On final failure, messages are routed to the Dead Letter Queue. An alerting rule fires within 90 seconds, and each DLQ message includes full correlation context — tenant ID, integration target, original payload hash, and all retry attempt timestamps.
 
 ### Adapter Pattern
 
 Each of the 12 third-party systems is encapsulated behind a common `IIntegrationAdapter` interface. The core orchestration layer has no knowledge of any specific external system — it calls `adapter.ExecuteAsync(request, tenantContext)` and handles the result. Adding a new integration means implementing one interface and registering the adapter; the retry engine, tracing, DLQ routing, and tenant isolation all apply automatically.
 
-This architecture has paid off repeatedly: two new integrations were added in production without any changes to the core engine.
-
 ### Disaster Recovery Topology
 
-The system is deployed across two Azure regions in an active/passive configuration:
+Active/passive multi-region deployment:
 
-- **Azure Front Door** routes all traffic to the primary region and fails over to secondary automatically based on health probe results
-- **SQL Server Failover Groups** replicate the application database with automatic failover, achieving RPO < 15 minutes
-- **Azure Service Bus Geo-DR** maintains a passive namespace mirror; a single alias switch promotes the secondary namespace with no message loss on the primary-to-secondary failover path
-- **AKS** in both regions runs identical workloads, kept warm via minimum replica counts so failover time is measured in seconds, not minutes
-
-Full DR runbook, including manual failover procedure and validation checklist, is maintained in the `/docs/runbooks` directory.
+- **Azure Front Door** routes all traffic to the primary region with automatic health-probe failover
+- **SQL Server Failover Groups** replicate the database with RPO < 15 minutes
+- **Azure Service Bus Geo-DR** maintains a passive namespace mirror with a single-alias promotion path
+- **AKS** in both regions runs identical workloads kept warm via minimum replica counts
 
 ---
 
@@ -105,31 +144,29 @@ Full DR runbook, including manual failover procedure and validation checklist, i
 
 ## Code Samples
 
-See [`/samples`](./samples) for sanitized, annotated excerpts of the core patterns:
+Annotated reference implementations in [`/samples`](./samples):
 
-- [`OutboxPublisher.cs`](./samples/OutboxPublisher.cs) — Transactional outbox write + idempotency key generation
-- [`IIntegrationAdapter.cs`](./samples/IIntegrationAdapter.cs) — Adapter interface contract
-- [`TenantResolverMiddleware.cs`](./samples/TenantResolverMiddleware.cs) — Per-tenant runtime configuration resolution
+- [`OutboxPublisher.cs`](./samples/OutboxPublisher.cs) — Transactional outbox write + SHA-256 idempotency key generation
+- [`IIntegrationAdapter.cs`](./samples/IIntegrationAdapter.cs) — Adapter interface contract with result types
+- [`TenantResolverMiddleware.cs`](./samples/TenantResolverMiddleware.cs) — Per-tenant runtime configuration resolution with 60s cache
 - [`RetryPolicyConfig.cs`](./samples/RetryPolicyConfig.cs) — Exponential retry ladder with DLQ routing
-- [`OpenTelemetryConfig.cs`](./samples/OpenTelemetryConfig.cs) — Distributed tracing setup, span creation per adapter call, and annotated example trace tree
+- [`OpenTelemetryConfig.cs`](./samples/OpenTelemetryConfig.cs) — Dual-export distributed tracing (App Insights + Jaeger) with annotated span tree
 
 ---
 
 ## Infrastructure
 
-All Azure resources are provisioned via Terraform in under 20 minutes from a cold start:
+All Azure resources are provisioned via Terraform in under 20 minutes from a cold start. See [`/infra`](./infra):
 
-```
+- [`main.tf`](./infra/main.tf) — AKS, Service Bus (with Geo-DR pairing), SQL Server + Failover Group, Key Vault, Front Door, Application Insights
+- [`variables.tf`](./infra/variables.tf) — All input variables with validation
+- [`outputs.tf`](./infra/outputs.tf) — AKS cluster name, Service Bus alias connection string, SQL failover endpoint, Key Vault URI, App Insights connection string
+
+```bash
 terraform init
 terraform plan -var-file="prod.tfvars"
 terraform apply
 ```
-
-See [`/infra`](./infra) for the full Terraform source:
-
-- [`main.tf`](./infra/main.tf) — AKS, Service Bus (with Geo-DR), SQL Server + Failover Group, Key Vault, Front Door, Application Insights
-- [`variables.tf`](./infra/variables.tf) — All input variables with validation
-- [`outputs.tf`](./infra/outputs.tf) — Outputs consumed by the GitHub Actions deploy pipeline
 
 ---
 
@@ -137,11 +174,11 @@ See [`/infra`](./infra) for the full Terraform source:
 
 Releases follow a canary deployment strategy on AKS:
 
-1. New image is built and pushed by GitHub Actions on merge to `main`
+1. New image built and pushed by GitHub Actions on merge to `main`
 2. k6 load test suite runs against staging, validating p99 latency and error rate thresholds
-3. AKS canary deployment routes 10% of traffic to the new version; Datadog/App Insights monitors for anomalies
+3. AKS canary deployment routes 10% of traffic to the new version; App Insights monitors for anomalies
 4. Full rollout proceeds automatically if no alerts fire within the observation window
-5. Automatic rollback triggers if p99 exceeds 150ms or error rate exceeds 0.5%
+5. Automatic rollback if p99 exceeds 150ms or error rate exceeds 0.5%
 
 ---
 
